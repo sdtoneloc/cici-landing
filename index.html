@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C.I.C.I. — AI Creative Director</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0a0908;
+    --bg2:       #0f0d0b;
+    --bg3:       #141210;
+    --gold:      #c9a84c;
+    --gold2:     #e8c97a;
+    --gold-dim:  rgba(201,168,76,0.15);
+    --gold-glow: rgba(201,168,76,0.06);
+    --white:     #f0ece4;
+    --muted:     #7a7468;
+    --edge:      rgba(201,168,76,0.12);
+    --edge2:     rgba(240,236,228,0.06);
+    --glass:     rgba(255,255,255,0.025);
+    --glass2:    rgba(201,168,76,0.04);
+    --r:         12px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: "DM Sans", sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CUSTOM CURSOR ── */
+  #cur  { position:fixed; width:6px; height:6px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width .2s,height .2s; }
+  #ring { position:fixed; width:32px; height:32px; border:1px solid rgba(201,168,76,0.4); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:width .3s,height .3s,border-color .3s; }
+  body:has(a:hover) #ring, body:has(button:hover) #ring { width:48px; height:48px; border-color:rgba(201,168,76,0.7); }
+
+  /* ── NOISE GRAIN OVERLAY ── */
+  body::before {
+    content:""; position:fixed; inset:0; z-index:1; pointer-events:none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+
+  /* ── UTILITY ── */
+  .gold { color: var(--gold); }
+  .reveal { opacity:0; transform:translateY(28px); transition:opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); }
+  .reveal.visible { opacity:1; transform:none; }
+  .delay-1 { transition-delay:.1s; }
+  .delay-2 { transition-delay:.2s; }
+  .delay-3 { transition-delay:.3s; }
+  .delay-4 { transition-delay:.4s; }
+
+  section { position: relative; z-index: 2; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 80px 24px 120px;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,0.07) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(100,60,20,0.08) 0%, transparent 60%);
+  }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid var(--edge); border-radius: 100px;
+    padding: 6px 18px; margin-bottom: 56px;
+    font-family: "DM Mono", monospace; font-size: 10px;
+    letter-spacing: .2em; color: var(--gold); text-transform: uppercase;
+    background: var(--glass2);
+  }
+  .hero-eyebrow::before { content:""; width:6px; height:6px; border-radius:50%; background:var(--gold); animation: blink 2s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .hero-wordmark {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(72px, 14vw, 180px);
+    font-weight: 300; letter-spacing: -.02em; line-height: .9;
+    color: var(--white); margin-bottom: 8px;
+  }
+  .hero-wordmark em { font-style: italic; color: var(--gold); }
+
+  .hero-sub-brand {
+    font-family: "DM Mono", monospace; font-size: 11px;
+    letter-spacing: .35em; color: var(--muted); text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .hero-divider {
+    width: 1px; height: 48px; background: linear-gradient(to bottom, var(--gold), transparent);
+    margin: 0 auto 40px;
+  }
+
+  .hero-desc {
+    max-width: 520px; font-size: clamp(15px,1.8vw,17px);
+    color: rgba(240,236,228,0.65); line-height: 1.75; margin-bottom: 56px;
+  }
+
+  .hero-cta-wrap { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--gold); color: #0a0908;
+    font-family: "DM Sans", sans-serif; font-size: 13px;
+    font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+    padding: 16px 32px; border-radius: 100px; text-decoration: none;
+    border: none; cursor: none;
+    transition: background .2s, transform .2s, box-shadow .2s;
+    box-shadow: 0 0 32px rgba(201,168,76,0.2);
+  }
+  .btn-primary:hover { background: var(--gold2); transform: translateY(-1px); box-shadow: 0 0 48px rgba(201,168,76,0.35); }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: transparent; color: var(--white);
+    font-family: "DM Sans", sans-serif; font-size: 13px;
+    font-weight: 400; letter-spacing: .08em; text-transform: uppercase;
+    padding: 15px 32px; border-radius: 100px; text-decoration: none;
+    border: 1px solid var(--edge2); cursor: none;
+    transition: border-color .2s, transform .2s;
+  }
+  .btn-secondary:hover { border-color: var(--gold); transform: translateY(-1px); }
+
+  .hero-proof {
+    margin-top: 72px; display: flex; align-items: center; gap: 20px;
+    font-size: 11px; color: var(--muted); letter-spacing: .1em;
+  }
+  .hero-proof span { color: var(--gold); font-size: 13px; }
+
+  /* ── TICKER ── */
+  .ticker-wrap {
+    overflow: hidden; border-top: 1px solid var(--edge); border-bottom: 1px solid var(--edge);
+    padding: 14px 0; background: rgba(201,168,76,0.02);
+  }
+  .ticker {
+    display: flex; gap: 0; width: max-content;
+    animation: ticker 30s linear infinite;
+  }
+  .ticker-item {
+    white-space: nowrap; padding: 0 48px;
+    font-family: "DM Mono", monospace; font-size: 10px;
+    letter-spacing: .2em; color: var(--muted); text-transform: uppercase;
+    display: flex; align-items: center; gap: 48px;
+  }
+  .ticker-item::after { content:"✦"; color: var(--gold); font-size: 8px; }
+  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* ── WHAT IS CICI ── */
+  .what { padding: 140px 24px; text-align: center; }
+  .what-inner { max-width: 760px; margin: 0 auto; }
+  .section-label {
+    font-family: "DM Mono", monospace; font-size: 10px;
+    letter-spacing: .25em; color: var(--gold); text-transform: uppercase;
+    margin-bottom: 24px; display: block;
+  }
+  .what h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(36px, 5.5vw, 62px);
+    font-weight: 300; line-height: 1.1; margin-bottom: 28px;
+  }
+  .what h2 em { font-style: italic; color: var(--gold); }
+  .what p { color: rgba(240,236,228,0.6); font-size: 16px; line-height: 1.8; }
+
+  /* ── FEATURES ── */
+  .features { padding: 60px 24px 140px; }
+  .features-inner { max-width: 1100px; margin: 0 auto; }
+  .features h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(32px, 4.5vw, 52px);
+    font-weight: 300; text-align: center; margin-bottom: 64px;
+  }
+  .feat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1px; background: var(--edge);
+    border: 1px solid var(--edge); border-radius: var(--r);
+    overflow: hidden;
+  }
+  .feat-card {
+    background: var(--bg2); padding: 36px 32px;
+    transition: background .3s;
+  }
+  .feat-card:hover { background: var(--bg3); }
+  .feat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: var(--glass2); border: 1px solid var(--edge);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px; font-size: 20px;
+  }
+  .feat-card h3 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 20px; font-weight: 400; margin-bottom: 10px; color: var(--white);
+  }
+  .feat-card p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .feat-tag {
+    display: inline-block; margin-top: 14px; padding: 3px 10px;
+    border-radius: 100px; border: 1px solid var(--edge);
+    font-family: "DM Mono", monospace; font-size: 9px;
+    letter-spacing: .15em; color: var(--gold); text-transform: uppercase;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how { padding: 140px 24px; background: var(--bg2); }
+  .how-inner { max-width: 800px; margin: 0 auto; }
+  .how h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(32px, 4.5vw, 52px);
+    font-weight: 300; text-align: center; margin-bottom: 72px;
+  }
+  .step { display: flex; gap: 32px; margin-bottom: 48px; align-items: flex-start; }
+  .step:last-child { margin-bottom: 0; }
+  .step-num {
+    flex-shrink: 0; width: 48px; height: 48px;
+    border: 1px solid var(--edge); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "DM Mono", monospace; font-size: 12px;
+    color: var(--gold); letter-spacing: .1em;
+    background: var(--glass2); margin-top: 4px;
+  }
+  .step-body h3 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 22px; font-weight: 400; margin-bottom: 8px;
+  }
+  .step-body p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  /* ── PRICING ── */
+  .pricing { padding: 140px 24px; }
+  .pricing-inner { max-width: 1050px; margin: 0 auto; }
+  .pricing h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(32px, 4.5vw, 52px);
+    font-weight: 300; text-align: center; margin-bottom: 16px;
+  }
+  .pricing-sub { text-align:center; color:var(--muted); font-size:14px; margin-bottom:64px; }
+
+  .plan-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+  .plan {
+    border: 1px solid var(--edge); border-radius: var(--r);
+    padding: 40px 32px; background: var(--bg2);
+    display: flex; flex-direction: column; position: relative;
+    transition: border-color .3s, transform .3s;
+  }
+  .plan:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-4px); }
+  .plan.featured {
+    border-color: var(--gold); background: var(--bg3);
+    box-shadow: 0 0 60px rgba(201,168,76,0.08);
+  }
+  .plan-badge {
+    position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+    background: var(--gold); color: #0a0908; padding: 4px 16px;
+    border-radius: 100px; font-family: "DM Mono", monospace;
+    font-size: 9px; letter-spacing: .2em; text-transform: uppercase; white-space: nowrap;
+  }
+  .plan-name {
+    font-family: "DM Mono", monospace; font-size: 10px;
+    letter-spacing: .25em; color: var(--muted); text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .plan-price {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 56px; font-weight: 300; line-height: 1;
+    margin-bottom: 4px; color: var(--white);
+  }
+  .plan-price sup { font-size: 22px; vertical-align: super; color: var(--muted); }
+  .plan-period { font-size: 12px; color: var(--muted); margin-bottom: 32px; }
+  .plan-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--edge); }
+  .plan-features { list-style: none; margin-bottom: 36px; flex: 1; }
+  .plan-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: rgba(240,236,228,0.7); margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .plan-features li::before { content:"—"; color: var(--gold); flex-shrink:0; margin-top: 1px; }
+  .plan-features li.dim { color: var(--muted); }
+  .plan-features li.dim::before { color: var(--muted); }
+  .plan-btn {
+    display: block; text-align: center; text-decoration: none;
+    padding: 14px; border-radius: 8px;
+    font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    font-weight: 500; cursor: none; transition: all .2s;
+  }
+  .plan-btn.gold-btn { background: var(--gold); color: #0a0908; }
+  .plan-btn.gold-btn:hover { background: var(--gold2); }
+  .plan-btn.outline-btn { border: 1px solid var(--edge); color: var(--white); }
+  .plan-btn.outline-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ── TRIAL CTA ── */
+  .trial-cta {
+    padding: 140px 24px;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%);
+    text-align: center;
+  }
+  .trial-cta h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(40px, 7vw, 86px);
+    font-weight: 300; line-height: 1.05; margin-bottom: 24px;
+  }
+  .trial-cta h2 em { font-style: italic; color: var(--gold); }
+  .trial-cta p { color: var(--muted); font-size: 15px; margin-bottom: 48px; max-width:480px; margin-left:auto; margin-right:auto; }
+  .trial-meta {
+    margin-top: 28px; font-family: "DM Mono", monospace;
+    font-size: 10px; letter-spacing: .15em; color: var(--muted);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--edge); padding: 48px 24px;
+    background: var(--bg);
+  }
+  .foot-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 24px;
+  }
+  .foot-brand {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 22px; font-weight: 300; color: var(--white);
+  }
+  .foot-brand span { color: var(--gold); }
+  .foot-center { text-align: center; }
+  .foot-copy { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .foot-company {
+    font-family: "DM Mono", monospace; font-size: 9px;
+    letter-spacing: .2em; color: rgba(201,168,76,0.5); text-transform: uppercase;
+  }
+  .foot-links { display: flex; gap: 28px; }
+  .foot-links a {
+    font-size: 11px; color: var(--muted); text-decoration: none;
+    transition: color .2s; letter-spacing: .05em;
+  }
+  .foot-links a:hover { color: var(--gold); }
+
+  @media(max-width: 768px) {
+    .hero-proof { flex-direction: column; gap: 8px; }
+    .step { gap: 20px; }
+    .plan-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+    .foot-inner { flex-direction: column; text-align: center; }
+    .foot-links { justify-content: center; }
+    .feat-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="ring"></div>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span>Now in private beta</span>
+  </div>
+
+  <h1 class="hero-wordmark reveal">
+    C.I.C.I.<br><em>AI Creative Director</em>
+  </h1>
+
+  <p class="hero-sub-brand reveal delay-1">BY KRICKET TICKET LLC</p>
+
+  <div class="hero-divider reveal delay-2"></div>
+
+  <p class="hero-desc reveal delay-2">
+    Your brand's creative director lives in Telegram. Drop a brief — get cinema-quality images, research-backed captions, and publication-ready content in seconds.
+  </p>
+
+  <div class="hero-cta-wrap reveal delay-3">
+    <a href="STRIPE_BASIC_LINK" class="btn-primary">
+      Start 3-Day Free Trial &nbsp;→
+    </a>
+    <a href="https://t.me/YOUR_BOT_USERNAME" class="btn-secondary">
+      Open in Telegram
+    </a>
+  </div>
+
+  <div class="hero-proof reveal delay-4">
+    <span>✦</span>
+    No credit card for trial &nbsp;·&nbsp; 3 days full access &nbsp;·&nbsp; Cancel anytime
+    <span>✦</span>
+  </div>
+</section>
+
+<!-- ── TICKER ── -->
+<div class="ticker-wrap" style="position:relative;z-index:2;">
+  <div class="ticker">
+    <div class="ticker-item">Instagram Post</div>
+    <div class="ticker-item">Instagram Reel</div>
+    <div class="ticker-item">Instagram Story</div>
+    <div class="ticker-item">TikTok</div>
+    <div class="ticker-item">LinkedIn</div>
+    <div class="ticker-item">Blog Post</div>
+    <div class="ticker-item">Twitter / X</div>
+    <div class="ticker-item">Facebook</div>
+    <div class="ticker-item">3 Image Variants</div>
+    <div class="ticker-item">AI Captions</div>
+    <div class="ticker-item">Brand Watermark</div>
+    <div class="ticker-item">Research-Backed Hooks</div>
+    <div class="ticker-item">Instagram Post</div>
+    <div class="ticker-item">Instagram Reel</div>
+    <div class="ticker-item">Instagram Story</div>
+    <div class="ticker-item">TikTok</div>
+    <div class="ticker-item">LinkedIn</div>
+    <div class="ticker-item">Blog Post</div>
+    <div class="ticker-item">Twitter / X</div>
+    <div class="ticker-item">Facebook</div>
+    <div class="ticker-item">3 Image Variants</div>
+    <div class="ticker-item">AI Captions</div>
+    <div class="ticker-item">Brand Watermark</div>
+    <div class="ticker-item">Research-Backed Hooks</div>
+  </div>
+</div>
+
+<!-- ── WHAT IS CICI ── -->
+<section class="what">
+  <div class="what-inner">
+    <span class="section-label reveal">What is C.I.C.I.</span>
+    <h2 class="reveal delay-1">
+      A creative director that never<br><em>sleeps, hesitates, or bills by the hour.</em>
+    </h2>
+    <p class="reveal delay-2">
+      C.I.C.I. is an AI-powered creative director living inside Telegram. Tell her your brief. She researches trends, generates three cinematic image variants, writes platform-optimized captions in three distinct voices, and delivers publication-ready files — all watermarked with your brand.
+    </p>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section class="features">
+  <div class="features-inner">
+    <h2 class="reveal">Everything your brand needs.<br><em style="font-style:italic;color:var(--gold)">Nothing it doesn't.</em></h2>
+    <div class="feat-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon">⬛</div>
+        <h3>Cinema-Quality Images</h3>
+        <p>3 distinct image variants per brief. Powered by FLUX and Gemini — no stock photos, no templates.</p>
+        <span class="feat-tag">All plans</span>
+      </div>
+      <div class="feat-card reveal delay-1">
+        <div class="feat-icon">✦</div>
+        <h3>3-Voice Captions</h3>
+        <p>Punchy, Informational, and Conversational — pick the voice that fits the moment.</p>
+        <span class="feat-tag">All plans</span>
+      </div>
+      <div class="feat-card reveal delay-2">
+        <div class="feat-icon">◈</div>
+        <h3>8 Platforms</h3>
+        <p>Instagram Post, Reel, Story, TikTok, LinkedIn, Twitter/X, Facebook, and Blog — each sized and formatted correctly.</p>
+        <span class="feat-tag">All plans</span>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">⟁</div>
+        <h3>Trend Research</h3>
+        <p>Perplexity-powered research surfaces what's trending in your niche before every render.</p>
+        <span class="feat-tag">All plans</span>
+      </div>
+      <div class="feat-card reveal delay-1">
+        <div class="feat-icon">◉</div>
+        <h3>Brand Watermark</h3>
+        <p>Your logo composited onto every image. Position it anywhere — CICI remembers your preference.</p>
+        <span class="feat-tag">Basic + Pro</span>
+      </div>
+      <div class="feat-card reveal delay-2">
+        <div class="feat-icon">▣</div>
+        <h3>Blog Post Generator</h3>
+        <p>Full long-form articles with headline options, header images, and branded formatting — delivered as a file.</p>
+        <span class="feat-tag">All plans</span>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">⊞</div>
+        <h3>Google Drive Sync</h3>
+        <p>Every project delivered to a branded folder in your Drive. No downloads, no file management.</p>
+        <span class="feat-tag">Basic + Pro</span>
+      </div>
+      <div class="feat-card reveal delay-1">
+        <div class="feat-icon">◈</div>
+        <h3>Canva Integration</h3>
+        <p>Push finished images directly into your Canva account as assets. Edit and publish without re-uploading.</p>
+        <span class="feat-tag">Pro only</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="how">
+  <div class="how-inner">
+    <h2 class="reveal">How it works.</h2>
+    <div class="step reveal delay-1">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h3>Open CICI on Telegram</h3>
+        <p>No app to download. No dashboard to learn. CICI lives where you already work — in Telegram. Start your 3-day trial instantly.</p>
+      </div>
+    </div>
+    <div class="step reveal delay-2">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h3>Set up your brand in 60 seconds</h3>
+        <p>Brand name, niche, tone, logo. CICI remembers everything — you never repeat yourself.</p>
+      </div>
+    </div>
+    <div class="step reveal delay-3">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h3>Drop a brief</h3>
+        <p>Choose a platform. Type your concept. CICI researches, generates, and delivers 3 image variants with captions in under 2 minutes.</p>
+      </div>
+    </div>
+    <div class="step reveal delay-4">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <h3>Pick, refine, publish</h3>
+        <p>Choose your image and caption. Refine if needed. Get your branded, watermarked file — ready to post.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRICING ── -->
+<section class="pricing">
+  <div class="pricing-inner">
+    <h2 class="reveal">Simple pricing.</h2>
+    <p class="pricing-sub reveal delay-1">Start free. Upgrade when you're ready. No contracts.</p>
+    <div class="plan-grid">
+
+      <!-- TRIAL -->
+      <div class="plan reveal">
+        <div class="plan-name">Free Trial</div>
+        <div class="plan-price"><sup>$</sup>0</div>
+        <div class="plan-period">3 days full access</div>
+        <p class="plan-desc">Everything unlocked for 3 days. No credit card required. See exactly what CICI can do for your brand.</p>
+        <ul class="plan-features">
+          <li>All 8 platforms</li>
+          <li>3 image variants per session</li>
+          <li>3-voice captions</li>
+          <li>Trend research included</li>
+          <li>Up to 5 sessions/day</li>
+          <li class="dim">Google Drive sync</li>
+          <li class="dim">Brand watermark (CICI watermark instead)</li>
+          <li class="dim">Canva integration</li>
+        </ul>
+        <a href="https://t.me/YOUR_BOT_USERNAME" class="plan-btn outline-btn">Start Free Trial →</a>
+      </div>
+
+      <!-- BASIC -->
+      <div class="plan featured reveal delay-1">
+        <div class="plan-badge">Most Popular</div>
+        <div class="plan-name">Basic</div>
+        <div class="plan-price"><sup>$</sup>29</div>
+        <div class="plan-period">per month</div>
+        <p class="plan-desc">The full CICI experience for growing brands. 30 sessions monthly — enough for daily content at a serious pace.</p>
+        <ul class="plan-features">
+          <li>All 8 platforms</li>
+          <li>30 sessions / month</li>
+          <li>3 sessions / day max</li>
+          <li>3-voice captions</li>
+          <li>Brand watermark (your logo)</li>
+          <li>Google Drive sync</li>
+          <li>Trend research included</li>
+          <li class="dim">Canva integration</li>
+        </ul>
+        <a href="STRIPE_BASIC_LINK" class="plan-btn gold-btn">Get Started →</a>
+      </div>
+
+      <!-- PRO -->
+      <div class="plan reveal delay-2">
+        <div class="plan-name">Pro</div>
+        <div class="plan-price"><sup>$</sup>59</div>
+        <div class="plan-period">per month</div>
+        <p class="plan-desc">For agencies and power creators. 100 sessions, Canva integration, and priority support for teams that live on content.</p>
+        <ul class="plan-features">
+          <li>All 8 platforms</li>
+          <li>100 sessions / month</li>
+          <li>10 sessions / day max</li>
+          <li>3-voice captions</li>
+          <li>Brand watermark (your logo)</li>
+          <li>Google Drive sync</li>
+          <li>Canva integration</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="STRIPE_PRO_LINK" class="plan-btn outline-btn">Go Pro →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── TRIAL CTA ── -->
+<section class="trial-cta">
+  <h2 class="reveal">
+    Your brand.<br><em>Three days.</em><br>On us.
+  </h2>
+  <p class="reveal delay-1">No credit card. No setup fee. Full access to every feature for 3 days — then $29/month if you want to keep going.</p>
+  <div class="reveal delay-2">
+    <a href="https://t.me/YOUR_BOT_USERNAME" class="btn-primary">
+      Open CICI on Telegram &nbsp;→
+    </a>
+  </div>
+  <p class="trial-meta reveal delay-3">CICI by Kricket Ticket LLC &nbsp;·&nbsp; Built for creators who demand more</p>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="foot-inner">
+    <div class="foot-brand">C.I.C.I. <span>✦</span></div>
+    <div class="foot-center">
+      <p class="foot-copy">© 2026 C.I.C.I. — AI Creative Director. All rights reserved.</p>
+      <p class="foot-company">A Kricket Ticket LLC Company</p>
+    </div>
+    <div class="foot-links">
+      <a href="mailto:hello@kricketticket.com">Contact</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Cursor
+  const cur = document.getElementById("cur");
+  const ring = document.getElementById("ring");
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener("mousemove", e => { mx=e.clientX; my=e.clientY; cur.style.left=mx+"px"; cur.style.top=my+"px"; });
+  (function tick(){ rx+=(mx-rx)*.1; ry+=(my-ry)*.1; ring.style.left=rx+"px"; ring.style.top=ry+"px"; requestAnimationFrame(tick); })();
+
+  // Scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add("visible"); });
+  }, { threshold: 0.07 });
+  document.querySelectorAll(".reveal").forEach(r => obs.observe(r));
+</script>
+</body>
+</html>
